@@ -6,86 +6,25 @@
 #include "freertos/event_groups.h"
 #include "freertos/semphr.h"
 #include "esp_system.h"
-#include "esp_wifi.h"
-#include "esp_event.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
 #include "lwip/netdb.h"
 #include "ping/ping_sock.h"
 #include <vector>
 
+#include "wifi_controller.hpp" // Include the WiFi controller class
+
 // --- Configuration ---
-#define WIFI_SSID      "WP17"
-#define WIFI_PASSWORD  "11111111"
+#define WIFI_SSID      "Tuchnevo7"
+#define WIFI_PASSWORD  "dtcmvbhnfyrb"
 
 // Global list of target hosts for specific status checks
 const std::string FULL_ACCESS_HOST = "google.com";
 const std::string RF_SITE_1 = "dzen.ru";
-const std::string RF_SITE_2 = "kp40.ru"; // User specified kp40.ru to be checked if dzen.ru is available but google.com is not
+const std::string RF_SITE_2 = "kp40.ru";
 
 static const char *TAG = "PING_APP";
 
-// --- WiFi Connection Logic (based on ESP-IDF example) ---
-
-static EventGroupHandle_t s_wifi_event_group;
-#define WIFI_CONNECTED_BIT BIT0
-#define WIFI_FAIL_BIT      BIT1
-static int s_retry_num = 0;
-
-static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
-    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
-        esp_wifi_connect();
-    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        if (s_retry_num < 5) {
-            esp_wifi_connect();
-            s_retry_num++;
-            ESP_LOGI(TAG, "retry to connect to the AP");
-        } else {
-            xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
-        }
-        ESP_LOGI(TAG,"connect to the AP fail");
-    } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
-        ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-        ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
-        s_retry_num = 0;
-        xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
-    }
-}
-
-void wifi_init_sta() {
-    s_wifi_event_group = xEventGroupCreate();
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-    esp_netif_create_default_wifi_sta();
-
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-
-    esp_event_handler_instance_t instance_any_id;
-    esp_event_handler_instance_t instance_got_ip;
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL, &instance_any_id));
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL, &instance_got_ip));
-
-    wifi_config_t wifi_config = {};
-    strncpy((char*)wifi_config.sta.ssid, WIFI_SSID, sizeof(wifi_config.sta.ssid));
-    strncpy((char*)wifi_config.sta.password, WIFI_PASSWORD, sizeof(wifi_config.sta.password));
-    
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
-    ESP_ERROR_CHECK(esp_wifi_start());
-
-    ESP_LOGI(TAG, "wifi_init_sta finished.");
-
-    EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
-
-    if (bits & WIFI_CONNECTED_BIT) {
-        ESP_LOGI(TAG, "connected to ap SSID:%s", WIFI_SSID);
-    } else if (bits & WIFI_FAIL_BIT) {
-        ESP_LOGI(TAG, "Failed to connect to SSID:%s", WIFI_SSID);
-    } else {
-        ESP_LOGE(TAG, "UNEXPECTED EVENT");
-    }
-}
 
 // --- Synchronous Ping Logic ---
 
@@ -96,12 +35,11 @@ struct PingContext {
 
 static void ping_on_success_cb(esp_ping_handle_t hdl, void *args) {
     auto* ctx = static_cast<PingContext*>(args);
-    ctx->success = true; // Mark that at least one packet was received
-    // We don't log here to keep it clean, stats are logged in on_end
+    ctx->success = true;
 }
 
 static void ping_on_timeout_cb(esp_ping_handle_t hdl, void *args) {
-    // A single packet timed out. The end callback will still be called.
+    // A single packet timed out.
 }
 
 static void ping_on_end_cb(esp_ping_handle_t hdl, void *args) {
@@ -227,8 +165,21 @@ extern "C" void app_main() {
     }
     ESP_ERROR_CHECK(ret);
 
-    ESP_LOGI(TAG, "Connecting to WiFi...");
-    wifi_init_sta();
+    // Initialize and connect WiFi using the controller component
+    WiFiController wifi_controller;
+    if (!wifi_controller.initialize()) {
+        ESP_LOGE(TAG, "Failed to initialize WiFi controller");
+        return;
+    }
+    wifi_controller.connect(WIFI_SSID, WIFI_PASSWORD);
+
+
+    // Wait for WiFi connection before checking websites
+    while (wifi_controller.getState() != WiFiController::ConnectionState::CONNECTED) {
+        ESP_LOGI(TAG, "Waiting for WiFi connection...");
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+    }
+    ESP_LOGI(TAG, "WiFi connected!");
 
     while(1) {
         ESP_LOGI(TAG, "--- Starting new round of status checks ---");

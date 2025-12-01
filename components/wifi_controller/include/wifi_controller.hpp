@@ -1,19 +1,12 @@
-#ifndef WIFI_CONTROLLER_HPP
-#define WIFI_CONTROLLER_HPP
+#pragma once
 
 #include <string>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/event_groups.h"
-#include "esp_system.h"
 #include "esp_wifi.h"
 #include "esp_event.h"
-#include "esp_log.h"
+#include "freertos/event_groups.h"
 
 class WiFiController {
 public:
-    static constexpr const char* TAG = "WiFiController";
-    
     enum class ConnectionState {
         DISCONNECTED,
         CONNECTING,
@@ -25,25 +18,24 @@ public:
     ~WiFiController();
 
     bool initialize();
-    bool connect(const std::string& ssid, const std::string& password);
-    void disconnect();
-    ConnectionState getState() const { return state_; }
-    bool isConnected() const { return state_ == ConnectionState::CONNECTED; }
-    std::string getSSID() const { return ssid_; }
+    void connect(const std::string& ssid, const std::string& password);
+    ConnectionState getState() const;
     int8_t getRSSI() const;
-    
+
 private:
-    static void eventHandler(void* arg, esp_event_base_t event_base,
-                            int32_t event_id, void* event_data);
+    static void eventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
+    void startConnectProcess();
+
+    static const char* TAG;
     
-    void startConnectProcess(const std::string& ssid, const std::string& password);
-    
-    ConnectionState state_;
+    // Member variables to hold state
+    volatile ConnectionState state_;
+    EventGroupHandle_t wifi_event_group_;
     std::string ssid_;
     std::string password_;
-    EventGroupHandle_t wifi_event_group_;
-    static constexpr int WIFI_CONNECTED_BIT = BIT0;
-    static constexpr int WIFI_DISCONNECTED_BIT = BIT1;
-};
+    int retry_num_;
 
-#endif // WIFI_CONTROLLER_HPP
+    // Event handler instances
+    esp_event_handler_instance_t instance_any_id_;
+    esp_event_handler_instance_t instance_got_ip_;
+};

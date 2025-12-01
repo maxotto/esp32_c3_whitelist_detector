@@ -1,16 +1,5 @@
-E:/Projects/ESP32_C3_TESTS/WhiteListDetector/main/main.cpp:19:12: error: 'vector' in namespace 'std' does not name a template type
-   19 | const std::vector<std::string> PING_TARGETS = {"google.com", "dzen.ru"};
-      |            ^~~~~~
-E:/Projects/ESP32_C3_TESTS/WhiteListDetector/main/main.cpp:15:1: note: 'std::vector' is defined in header '<vector>'; this is probably fixable by adding '#include <vector>'
-   14 | #include "ping/ping_sock.h"
-  +++ |+#include <vector>
-   15 |
-E:/Projects/ESP32_C3_TESTS/WhiteListDetector/main/main.cpp: In function 'void app_main()':
-E:/Projects/ESP32_C3_TESTS/WhiteListDetector/main/main.cpp:207:33: error: 'PING_TARGETS' was not declared in this scope
-  207 |         for (const auto& host : PING_TARGETS) {
-      |                                 ^~~~~~~~~~~~
-E:/Projects/ESP32_C3_TESTS/WhiteListDetector/main/main.cpp: At global scope:
-E:/Projects/ESP32_C3_TESTS/WhiteListDetector/main/main.cpp:121:13: warning: 'bool execute_ping(const std::string&)' defined but not used [-Wunused-function]
-  121 | static bool execute_ping(const std::string& host) {
-      |             ^~~~~~~~~~~~
+E:/Projects/ESP32_C3_TESTS/WhiteListDetector/components/wifi_controller/src/wifi_controller.cpp: In member function 'bool WiFiController::initialize()':
+E:/Projects/ESP32_C3_TESTS/WhiteListDetector/components/wifi_controller/src/wifi_controller.cpp:50:5: error: 'ret' was not declared in this scope
+   50 |     ret = esp_wifi_start();
+      |     ^~~
 ninja: build stopped: subcommand failed.
