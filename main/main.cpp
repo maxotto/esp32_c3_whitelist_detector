@@ -16,7 +16,7 @@
 #include "led_strip_types.h" // Explicitly include for enums 
 
 // --- Configuration ---
-#define WIFI_SSID      "Tuchnevo7"
+#define WIFI_SSID      "Tuchnevo7Viva"
 #define WIFI_PASSWORD  "dtcmvbhnfyrb"
 #define LED_STRIP_GPIO 2
 #define LED_STRIP_LED_COUNT 4
