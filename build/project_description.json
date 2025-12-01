@@ -1,7 +1,7 @@
 {
     "version":            "1.2",
     "project_name":       "WhiteListDetector",
-    "project_version":    "1",
+    "project_version":    "a056050-dirty",
     "project_path":       "E:/Projects/ESP32_C3_TESTS/WhiteListDetector",
     "idf_path":           "C:/Espressif/frameworks/esp-idf-v5.5.1",
     "build_dir":          "E:/Projects/ESP32_C3_TESTS/WhiteListDetector/build",
@@ -1570,7 +1570,7 @@
             "managed_reqs": [],
             "managed_priv_reqs": [],
             "file": "E:/Projects/ESP32_C3_TESTS/WhiteListDetector/build/esp-idf/website_detector/libwebsite_detector.a",
-            "sources": [ "E:/Projects/ESP32_C3_TESTS/WhiteListDetector/components/website_detector/src/website_detector.cpp" ],
+            "sources": [ "E:/Projects/ESP32_C3_TESTS/WhiteListDetector/components/website_detector/src/website_detector.cpp", "E:/Projects/ESP32_C3_TESTS/WhiteListDetector/components/website_detector/src/Pinger.cpp" ],
             "include_dirs": [ "include" ]
         },
         "wifi_controller": {
