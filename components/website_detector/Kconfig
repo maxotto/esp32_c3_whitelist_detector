@@ -1,0 +1,11 @@
+# Component configuration
+
+menu "Website Detector"
+
+config WEBSITE_DETECTOR_ENABLED
+    bool "Enable Website Detector"
+    default y
+    help
+      Enable the Website Detector component
+
+endmenu

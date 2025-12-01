@@ -1,0 +1,87 @@
+# ESP-IDF project .gitignore
+
+# Build artifacts
+/build/
+/build-*
+/partitions.bin
+/flasher_args.json
+/perf_trace/
+/pcbtips/
+
+# SDK Configuration
+/sdkconfig
+/sdkconfig.old
+
+# Log files
+*.log
+/error.txt
+
+# IDE specific files
+.vscode/
+.idea/
+
+# OS specific files
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Dependencies
+/components/_deps/
+/_deps/
+
+# Temp files
+*.tmp
+*.temp
+/tmp/
+/temp/
+
+# CMake files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+ninja.log
+.ninja_log
+.ninja_deps
+compile_commands.json
+
+# Output files
+*.bin
+*.elf
+*.map
+
+# Python virtual environments
+venv/
+env/
+.venv/
+
+# Documentation
+/doc/
+/docs/
+
+# Ignore all files in build directory but keep the directory structure
+build/**/*
+!build/
+!build/.gitkeep
+
+# Keep source files but ignore build artifacts
+!main/
+!components/
+!CMakeLists.txt
+!partitions.csv
+!**/*.c
+!**/*.cpp
+!**/*.h
+!**/*.hpp
+!**/*.py
+!**/*.txt
+!**/*.json
+!**/*.md
+
+# Keep component files
+!components/**/include/
+!components/**/src/
+!components/**/CMakeLists.txt
+!components/**/Kconfig

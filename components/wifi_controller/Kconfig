@@ -1,0 +1,11 @@
+# Component configuration
+
+menu "WiFi Controller"
+
+config WIFI_CONTROLLER_ENABLED
+    bool "Enable WiFi Controller"
+    default y
+    help
+      Enable the WiFi Controller component
+
+endmenu
