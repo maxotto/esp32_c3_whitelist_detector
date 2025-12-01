@@ -1,5 +1,0 @@
-E:/Projects/ESP32_C3_TESTS/WhiteListDetector/components/wifi_controller/src/wifi_controller.cpp: In member function 'bool WiFiController::initialize()':
-E:/Projects/ESP32_C3_TESTS/WhiteListDetector/components/wifi_controller/src/wifi_controller.cpp:50:5: error: 'ret' was not declared in this scope
-   50 |     ret = esp_wifi_start();
-      |     ^~~
-ninja: build stopped: subcommand failed.
