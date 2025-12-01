@@ -81,8 +81,8 @@ bool WiFiController::initialize() {
         return false;
     }
 
-    // Set WiFi TX power to 50% (10 out of 20 dBm max)
-    ret = esp_wifi_set_max_tx_power(40); // 40 units = 10dBm (50% of max power which is 20dBm), each unit is 0.25dBm
+    // Set WiFi TX power to 10% (2 out of 20 dBm max)
+    ret = esp_wifi_set_max_tx_power(8); // 8 units = 2dBm (10% of max power which is 20dBm)
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to set WiFi TX power");
         return false;

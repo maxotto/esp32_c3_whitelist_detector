@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string>
+#include "esp_heap_caps.h" // For heap memory info
 
 extern "C" {
 #include "freertos/FreeRTOS.h"
@@ -20,6 +21,8 @@ extern "C" void app_main() {
         ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
+    printf("Initial free heap (internal, 8bit): %zu bytes\n", heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT));
+    printf("Initial free heap (total): %zu bytes\n", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
 
     // Initialize WiFi controller
     WiFiController wifi_controller;
@@ -30,8 +33,8 @@ extern "C" void app_main() {
     }
 
     // Try to connect to WiFi
-    const std::string ssid = "Tuchnevo7";
-    const std::string password = "dtcmvbhnfyrb";
+    const std::string ssid = "WP17";
+    const std::string password = "11111111";
 
     printf("Attempting to connect to WiFi: %s\n", ssid.c_str());
     wifi_controller.connect(ssid, password);
@@ -50,9 +53,16 @@ extern "C" void app_main() {
     // Main loop to perform checks every minute
     while (1) {
         printf("Performing website accessibility check...\n");
+        size_t heap_before_check = heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+        printf("Free heap before checkAllSites (internal, 8bit): %zu bytes\n", heap_before_check);
+        printf("Free heap before checkAllSites (total): %zu bytes\n", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
 
         // Perform the check
         website_detector.checkAllSites();
+
+        size_t heap_after_check = heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+        printf("Free heap after checkAllSites (internal, 8bit): %zu bytes (Used in call: %zu)\n", heap_after_check, heap_before_check - heap_after_check);
+        printf("Free heap after checkAllSites (total): %zu bytes\n", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
 
         // Determine the overall status based on the results
         std::string overall_status = "No Access"; // Default status

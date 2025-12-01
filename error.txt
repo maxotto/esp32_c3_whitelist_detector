@@ -1,0 +1,340 @@
+Executing action: monitor
+Running idf_monitor in directory E:\Projects\ESP32_C3_TESTS\WhiteListDetector
+Executing "E:\Espressif\python_env\idf5.5_py3.11_env\Scripts\python.exe C:\Espressif\frameworks\esp-idf-v5.5.1\tools/idf_monitor.py -p COM8 -b 115200 --toolchain-prefix riscv32-esp-elf- --target esp32c3 --revision 3 --decode-panic backtrace E:\Projects\ESP32_C3_TESTS\WhiteListDetector\build\WhiteListDetector.elf E:\Projects\ESP32_C3_TESTS\WhiteListDetector\build\bootloader\bootloader.elf --force-color -m 'E:\Espressif\python_env\idf5.5_py3.11_env\Scripts\python.exe' 'C:\Espressif\frameworks\esp-idf-v5.5.1\tools\idf.py' '-p' 'COM8'"...
+--- Warning: GDB cannot open serial ports accessed as COMx
+--- Using \\.\COM8 instead...
+--- esp-idf-monitor 1.8.0 on \\.\COM8 115200
+--- Quit: Ctrl+] | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H
+ESP-ROM:esp32c3-api1-20210207
+Build:Feb  7 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0xf (SPI_FAST_FLASH_BOOT)
+Saved PC:0x40383d8e
+--- 0x40383d8e: rv_utils_wait_for_intr at C:/Espressif/frameworks/esp-idf-v5.5.1/components/riscv/include/riscv/rv_utils.h:79
+--- (inlined by) esp_cpu_wait_for_intr at C:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_hw_support/cpu.c:62
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fcd5820,len:0x15ac
+load:0x403cbf10,len:0xc34
+--- 0x403cbf10: esp_bootloader_get_description at C:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_bootloader_format/esp_bootloader_desc.c:39
+load:0x403ce710,len:0x2fd0
+--- 0x403ce710: esp_flash_encryption_enabled at C:/Espressif/frameworks/esp-idf-v5.5.1/components/bootloader_support/src/flash_encrypt.c:89
+entry 0x403cbf1a
+--- 0x403cbf1a: call_start_cpu0 at C:/Espressif/frameworks/esp-idf-v5.5.1/components/bootloader/subproject/main/bootloader_start.c:25
+I (24) boot: ESP-IDF v5.5.1 2nd stage bootloader
+I (24) boot: compile time Dec  1 2025 14:28:21
+I (25) boot: chip revision: v0.4
+I (25) boot: efuse block revision: v1.3
+I (28) boot.esp32c3: SPI Speed      : 80MHz
+I (32) boot.esp32c3: SPI Mode       : DIO
+I (36) boot.esp32c3: SPI Flash Size : 2MB
+I (39) boot: Enabling RNG early entropy source...
+I (44) boot: Partition Table:
+I (46) boot: ## Label            Usage          Type ST Offset   Length
+I (53) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (59) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (66) boot:  2 factory          factory app      00 00 00010000 00100000
+I (72) boot: End of partition table
+I (76) esp_image: segment 0: paddr=00010020 vaddr=3c0a0020 size=1a63ch (108092) map
+I (100) esp_image: segment 1: paddr=0002a664 vaddr=3fc94800 size=02dach ( 11692) load
+I (103) esp_image: segment 2: paddr=0002d418 vaddr=40380000 size=02c00h ( 11264) load
+I (106) esp_image: segment 3: paddr=00030020 vaddr=42000020 size=9b24ch (635468) map
+I (213) esp_image: segment 4: paddr=000cb274 vaddr=40382c00 size=11ac8h ( 72392) load
+I (226) esp_image: segment 5: paddr=000dcd44 vaddr=50000000 size=00020h (    32) load
+I (233) boot: Loaded app from partition at offset 0x10000
+I (233) boot: Disabling RNG early entropy source...
+I (244) cpu_start: Unicore app
+I (252) cpu_start: Pro cpu start user code
+I (252) cpu_start: cpu freq: 160000000 Hz
+I (253) app_init: Application information:
+I (253) app_init: Project name:     WhiteListDetector
+I (257) app_init: App version:      0296a8c-dirty
+I (262) app_init: Compile time:     Dec  1 2025 16:19:16
+I (267) app_init: ELF file SHA256:  ecb93bd9f...
+I (271) app_init: ESP-IDF:          v5.5.1
+I (275) efuse_init: Min chip rev:     v0.3
+I (279) efuse_init: Max chip rev:     v1.99
+I (283) efuse_init: Chip rev:         v0.4
+I (287) heap_init: Initializing. RAM available for dynamic allocation:
+I (293) heap_init: At 3FC9BE60 len 000241A0 (144 KiB): RAM
+I (298) heap_init: At 3FCC0000 len 0001C710 (113 KiB): Retention RAM
+I (304) heap_init: At 3FCDC710 len 00002950 (10 KiB): Retention RAM
+I (310) heap_init: At 50000020 len 00001FC8 (7 KiB): RTCRAM
+I (316) spi_flash: detected chip: generic
+I (319) spi_flash: flash io: dio
+W (322) spi_flash: Detected size(4096k) larger than the size in the binary image header(2048k). Using the size in the binary image header.
+I (335) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (341) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (347) main_task: Started on CPU0
+I (347) main_task: Calling app_main()
+Initial free heap (internal, 8bit): 265460 bytes
+Initial free heap (total): 265460 bytes
+I (357) pp: pp rom version: 9387209
+I (357) net80211: net80211 rom version: 9387209
+I (377) wifi:wifi driver task: 3fca50f4, prio:23, stack:6656, core=0
+I (377) wifi:wifi firmware version: 14da9b7
+I (377) wifi:wifi certification version: v7.0
+I (377) wifi:config NVS flash: enabled
+I (377) wifi:config nano formatting: disabled
+I (387) wifi:Init data frame dynamic rx buffer num: 32
+I (387) wifi:Init static rx mgmt buffer num: 5
+I (397) wifi:Init management short buffer num: 32
+I (397) wifi:Init dynamic tx buffer num: 32
+I (407) wifi:Init static tx FG buffer num: 2
+I (407) wifi:Init static rx buffer size: 1600
+I (407) wifi:Init static rx buffer num: 10
+I (417) wifi:Init dynamic rx buffer num: 32
+I (417) wifi_init: rx ba win: 6
+I (417) wifi_init: accept mbox: 6
+I (427) wifi_init: tcpip mbox: 32
+I (427) wifi_init: udp mbox: 6
+I (427) wifi_init: tcp mbox: 6
+I (437) wifi_init: tcp tx win: 5760
+I (437) wifi_init: tcp rx win: 5760
+I (437) wifi_init: tcp mss: 1440
+I (447) wifi_init: WiFi IRAM OP enabled
+I (447) wifi_init: WiFi RX IRAM OP enabled
+I (447) phy_init: phy_version 1201,bae5dd99,Mar  3 2025,15:36:21
+I (487) phy_init: Saving new calibration data due to checksum failure or outdated calibration data, mode(0)
+I (507) wifi:mode : sta (3c:dc:75:3a:6e:98)
+I (507) wifi:enable tsf
+I (507) WiFiController: WiFi station started
+I (507) WiFiController: WiFi controller initialized successfully with 50% TX power
+Attempting to connect to WiFi: WP17
+I (517) WiFiController: Connecting to SSID: WP17
+Waiting for WiFi connection...
+I (527) wifi:new:<11,0>, old:<1,0>, ap:<255,255>, sta:<11,0>, prof:1, snd_ch_cfg:0x0
+I (537) wifi:state: init -> auth (0xb0)
+I (567) wifi:state: auth -> assoc (0x0)
+I (577) wifi:state: assoc -> run (0x10)
+I (597) wifi:state: run -> init (0x2c0)
+I (607) wifi:new:<11,0>, old:<11,0>, ap:<255,255>, sta:<11,0>, prof:1, snd_ch_cfg:0x0
+I (607) WiFiController: WiFi station disconnected
+E (607) WiFiController: Disconnect reason: 2
+I (607) WiFiController: Attempting to reconnect...
+W (877) wifi:tx null, bss is null
+Waiting for WiFi connection...
+Waiting for WiFi connection...
+I (5617) WiFiController: Connecting to SSID: WP17
+I (5617) wifi:new:<11,0>, old:<11,0>, ap:<255,255>, sta:<11,0>, prof:1, snd_ch_cfg:0x0
+I (5617) wifi:state: init -> auth (0xb0)
+I (5627) wifi:state: auth -> assoc (0x0)
+I (5637) wifi:state: assoc -> run (0x10)
+I (5647) wifi:connected with WP17, aid = 1, channel 11, BW20, bssid = fe:0b:42:11:05:1e
+I (5647) wifi:security: WPA2-PSK, phy: bgn, rssi: -24
+I (5657) wifi:pm start, type: 1
+
+I (5657) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us
+I (5667) wifi:set rx beacon pti, rx_bcn_pti: 0, bcn_timeout: 25000, mt_pti: 0, mt_time: 10000
+I (5677) wifi:dp: 2, bi: 102400, li: 4, scale listen interval from 307200 us to 409600 us
+I (5677) wifi:AP's beacon interval = 102400 us, DTIM period = 2
+I (5687) WiFiController: WiFi station connected
+Waiting for WiFi connection...
+I (6717) esp_netif_handlers: sta ip: 10.215.17.205, mask: 255.255.255.0, gw: 10.215.17.29
+I (6717) WiFiController: Got IP: 10.215.17.205
+WiFi connected! Starting periodic website accessibility checks...
+Performing website accessibility check...
+Free heap before checkAllSites (internal, 8bit): 212892 bytes
+Free heap before checkAllSites (total): 212892 bytes
+I (8527) WebsiteDetector: Starting website accessibility check for all lists...
+I (8537) PINGER: Pinger::ping() started for host: dzen.ru
+E (8847) ping_sock: send error=0
+W (9847) PINGER_CB: on_ping_timeout (single packet)
+I (9847) PINGER_CB: on_ping_end
+I (9847) PINGER: Pinger::ping() completed for host: dzen.ru. Received: 0
+I (9847) WebsiteDetector: Ping result for https://dzen.ru (dzen.ru): BLOCKED
+I (9857) WebsiteDetector: White List Site 'Dzen' (https://dzen.ru) status: BLOCKED
+I (9857) PINGER: Pinger::ping() started for host: kp40.ru
+E (10077) ping_sock: send error=0
+W (11077) PINGER_CB: on_ping_timeout (single packet)
+I (11077) PINGER_CB: on_ping_end
+I (11077) PINGER: Pinger::ping() completed for host: kp40.ru. Received: 0
+I (11077) WebsiteDetector: Ping result for https://kp40.ru (kp40.ru): BLOCKED
+I (11087) WebsiteDetector: RF Only Site 'KP40' (https://kp40.ru) status: BLOCKED
+I (11087) PINGER: Pinger::ping() started for host: google.com
+E (11147) ping_sock: send error=0
+W (12147) PINGER_CB: on_ping_timeout (single packet)
+I (12147) PINGER_CB: on_ping_end
+I (12147) PINGER: Pinger::ping() completed for host: google.com. Received: 0
+I (12147) WebsiteDetector: Ping result for https://google.com (google.com): BLOCKED
+I (12157) WebsiteDetector: Full Access Site 'Google' (https://google.com) status: BLOCKED
+I (12157) WebsiteDetector: Website accessibility check completed.
+Free heap after checkAllSites (internal, 8bit): 209208 bytes (Used in call: 3684)
+Free heap after checkAllSites (total): 209208 bytes
+
+--- Current Internet Status ---
+Status: No Access
+WiFi RSSI: -28 dBm
+
+Waiting for 60 seconds before next check...
+Performing website accessibility check...
+Free heap before checkAllSites (internal, 8bit): 212572 bytes
+Free heap before checkAllSites (total): 212572 bytes
+I (72187) WebsiteDetector: Starting website accessibility check for all lists...
+I (72197) PINGER: Pinger::ping() started for host: dzen.ru
+E (72197) ping_sock: send error=0
+W (73197) PINGER_CB: on_ping_timeout (single packet)
+I (73197) PINGER_CB: on_ping_end
+I (73197) PINGER: Pinger::ping() completed for host: dzen.ru. Received: 0
+I (73197) WebsiteDetector: Ping result for https://dzen.ru (dzen.ru): BLOCKED
+I (73207) WebsiteDetector: White List Site 'Dzen' (https://dzen.ru) status: BLOCKED
+I (73207) PINGER: Pinger::ping() started for host: kp40.ru
+E (73357) ping_sock: send error=0
+W (74357) PINGER_CB: on_ping_timeout (single packet)
+I (74357) PINGER_CB: on_ping_end
+I (74357) PINGER: Pinger::ping() completed for host: kp40.ru. Received: 0
+I (74357) WebsiteDetector: Ping result for https://kp40.ru (kp40.ru): BLOCKED
+I (74367) WebsiteDetector: RF Only Site 'KP40' (https://kp40.ru) status: BLOCKED
+I (74367) PINGER: Pinger::ping() started for host: google.com
+E (74377) ping_sock: send error=0
+W (75377) PINGER_CB: on_ping_timeout (single packet)
+I (75377) PINGER_CB: on_ping_end
+I (75377) PINGER: Pinger::ping() completed for host: google.com. Received: 0
+I (75377) WebsiteDetector: Ping result for https://google.com (google.com): BLOCKED
+I (75387) WebsiteDetector: Full Access Site 'Google' (https://google.com) status: BLOCKED
+I (75387) WebsiteDetector: Website accessibility check completed.
+Free heap after checkAllSites (internal, 8bit): 209196 bytes (Used in call: 3376)
+Free heap after checkAllSites (total): 209148 bytes
+
+--- Current Internet Status ---
+Status: No Access
+WiFi RSSI: -55 dBm
+
+Waiting for 60 seconds before next check...
+I (127287) wifi:bcn_timeout,ap_probe_send_start
+I (129787) wifi:ap_probe_send over, reset wifi status to disassoc
+I (129787) wifi:state: run -> init (0xc800)
+I (129797) wifi:pm stop, total sleep time: 78725039 us / 124137339 us
+
+I (129797) wifi:new:<11,0>, old:<11,0>, ap:<255,255>, sta:<11,0>, prof:1, snd_ch_cfg:0x0
+I (129797) WiFiController: WiFi station disconnected
+E (129807) WiFiController: Disconnect reason: 200
+I (129807) WiFiController: Attempting to reconnect...
+I (134807) WiFiController: Connecting to SSID: WP17
+I (134907) wifi:new:<11,0>, old:<11,0>, ap:<255,255>, sta:<11,0>, prof:1, snd_ch_cfg:0x0
+I (134907) wifi:state: init -> auth (0xb0)
+Performing website accessibility check...
+Free heap before checkAllSites (internal, 8bit): 212980 bytes
+Free heap before checkAllSites (total): 212980 bytes
+I (135417) WebsiteDetector: Starting website accessibility check for all lists...
+I (135427) PINGER: Pinger::ping() started for host: dzen.ru
+I (135917) wifi:state: auth -> init (0x200)
+I (135927) wifi:new:<11,0>, old:<11,0>, ap:<255,255>, sta:<11,0>, prof:1, snd_ch_cfg:0x0
+I (135927) WiFiController: WiFi station disconnected
+E (135927) WiFiController: Disconnect reason: 2
+I (135927) WiFiController: Attempting to reconnect...
+I (140937) WiFiController: Connecting to SSID: WP17
+I (141047) wifi:new:<11,0>, old:<11,0>, ap:<255,255>, sta:<11,0>, prof:1, snd_ch_cfg:0x0
+I (141047) wifi:state: init -> auth (0xb0)
+E (141547) PINGER: DNS lookup failed for host: dzen.ru, error: 202
+I (141547) WebsiteDetector: Ping result for https://dzen.ru (dzen.ru): ERROR
+I (141547) WebsiteDetector: White List Site 'Dzen' (https://dzen.ru) status: ERROR
+I (141547) PINGER: Pinger::ping() started for host: kp40.ru
+E (141557) ping_sock: send error=0
+I (142057) wifi:state: auth -> init (0x200)
+I (142067) wifi:new:<11,0>, old:<11,0>, ap:<255,255>, sta:<11,0>, prof:1, snd_ch_cfg:0x0
+I (142067) WiFiController: WiFi station disconnected
+E (142067) WiFiController: Disconnect reason: 2
+I (142067) WiFiController: Attempting to reconnect...
+W (142557) PINGER_CB: on_ping_timeout (single packet)
+I (142557) PINGER_CB: on_ping_end
+I (142557) PINGER: Pinger::ping() completed for host: kp40.ru. Received: 0
+I (142557) WebsiteDetector: Ping result for https://kp40.ru (kp40.ru): BLOCKED
+I (142567) WebsiteDetector: RF Only Site 'KP40' (https://kp40.ru) status: BLOCKED
+I (142567) PINGER: Pinger::ping() started for host: google.com
+E (142577) ping_sock: send error=0
+W (143577) PINGER_CB: on_ping_timeout (single packet)
+I (143577) PINGER_CB: on_ping_end
+I (143577) PINGER: Pinger::ping() completed for host: google.com. Received: 0
+I (143577) WebsiteDetector: Ping result for https://google.com (google.com): BLOCKED
+I (143587) WebsiteDetector: Full Access Site 'Google' (https://google.com) status: BLOCKED
+I (143587) WebsiteDetector: Website accessibility check completed.
+Free heap after checkAllSites (internal, 8bit): 209636 bytes (Used in call: 3344)
+Free heap after checkAllSites (total): 209636 bytes
+
+--- Current Internet Status ---
+Status: No Access
+WiFi RSSI: 0 dBm
+
+Waiting for 60 seconds before next check...
+I (147077) WiFiController: Connecting to SSID: WP17
+I (149477) WiFiController: WiFi station disconnected
+E (149487) WiFiController: Disconnect reason: 201
+I (149487) WiFiController: Attempting to reconnect...
+I (154487) WiFiController: Connecting to SSID: WP17
+I (156887) WiFiController: WiFi station disconnected
+E (156897) WiFiController: Disconnect reason: 201
+I (156897) WiFiController: Attempting to reconnect...
+I (161897) WiFiController: Connecting to SSID: WP17
+I (164297) WiFiController: WiFi station disconnected
+E (164307) WiFiController: Disconnect reason: 201
+I (164307) WiFiController: Attempting to reconnect...
+I (169307) WiFiController: Connecting to SSID: WP17
+I (169387) wifi:new:<11,0>, old:<11,0>, ap:<255,255>, sta:<11,0>, prof:1, snd_ch_cfg:0x0
+I (169387) wifi:state: init -> auth (0xb0)
+I (170397) wifi:state: auth -> init (0x200)
+I (170407) wifi:new:<11,0>, old:<11,0>, ap:<255,255>, sta:<11,0>, prof:1, snd_ch_cfg:0x0
+I (170407) WiFiController: WiFi station disconnected
+E (170407) WiFiController: Disconnect reason: 2
+I (170407) WiFiController: Attempting to reconnect...
+I (175417) WiFiController: Connecting to SSID: WP17
+I (175467) wifi:new:<11,0>, old:<11,0>, ap:<255,255>, sta:<11,0>, prof:1, snd_ch_cfg:0x0
+I (175477) wifi:state: init -> auth (0xb0)
+I (176497) wifi:state: auth -> init (0x200)
+I (176507) wifi:new:<11,0>, old:<11,0>, ap:<255,255>, sta:<11,0>, prof:1, snd_ch_cfg:0x0
+I (176507) WiFiController: WiFi station disconnected
+E (176507) WiFiController: Disconnect reason: 2
+I (176507) WiFiController: Attempting to reconnect...
+I (181517) WiFiController: Connecting to SSID: WP17
+I (181547) wifi:new:<11,0>, old:<11,0>, ap:<255,255>, sta:<11,0>, prof:1, snd_ch_cfg:0x0
+I (181547) wifi:state: init -> auth (0xb0)
+I (181557) wifi:state: auth -> assoc (0x0)
+I (181567) wifi:state: assoc -> run (0x10)
+I (184587) wifi:state: run -> init (0xf00)
+I (184597) wifi:new:<11,0>, old:<11,0>, ap:<255,255>, sta:<11,0>, prof:1, snd_ch_cfg:0x0
+I (184597) WiFiController: WiFi station disconnected
+E (184597) WiFiController: Disconnect reason: 15
+I (184597) WiFiController: Attempting to reconnect...
+I (189607) WiFiController: Connecting to SSID: WP17
+I (189687) wifi:new:<11,0>, old:<11,0>, ap:<255,255>, sta:<11,0>, prof:1, snd_ch_cfg:0x0
+I (189687) wifi:state: init -> auth (0xb0)
+I (189697) wifi:state: auth -> assoc (0x0)
+I (189707) wifi:state: assoc -> run (0x10)
+I (189727) wifi:connected with WP17, aid = 1, channel 11, BW20, bssid = fe:0b:42:11:05:1e
+I (189727) wifi:security: WPA2-PSK, phy: bgn, rssi: -76
+I (189727) wifi:pm start, type: 1
+
+I (189727) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us
+I (189737) wifi:set rx beacon pti, rx_bcn_pti: 0, bcn_timeout: 25000, mt_pti: 0, mt_time: 10000
+I (189747) WiFiController: WiFi station connected
+I (189787) wifi:dp: 2, bi: 102400, li: 4, scale listen interval from 307200 us to 409600 us
+I (189787) wifi:AP's beacon interval = 102400 us, DTIM period = 2
+I (190777) esp_netif_handlers: sta ip: 10.215.17.205, mask: 255.255.255.0, gw: 10.215.17.29
+I (190777) WiFiController: Got IP: 10.215.17.205
+Performing website accessibility check...
+Free heap before checkAllSites (internal, 8bit): 212396 bytes
+Free heap before checkAllSites (total): 212444 bytes
+I (203617) WebsiteDetector: Starting website accessibility check for all lists...
+I (203627) PINGER: Pinger::ping() started for host: dzen.ru
+E (205127) ping_sock: send error=0
+W (206127) PINGER_CB: on_ping_timeout (single packet)
+I (206127) PINGER_CB: on_ping_end
+I (206127) PINGER: Pinger::ping() completed for host: dzen.ru. Received: 0
+I (206127) WebsiteDetector: Ping result for https://dzen.ru (dzen.ru): BLOCKED
+I (206137) WebsiteDetector: White List Site 'Dzen' (https://dzen.ru) status: BLOCKED
+I (206137) PINGER: Pinger::ping() started for host: kp40.ru
+E (206147) ping_sock: send error=0
+W (207147) PINGER_CB: on_ping_timeout (single packet)
+I (207147) PINGER_CB: on_ping_end
+I (207147) PINGER: Pinger::ping() completed for host: kp40.ru. Received: 0
+I (207147) WebsiteDetector: Ping result for https://kp40.ru (kp40.ru): BLOCKED
+I (207157) WebsiteDetector: RF Only Site 'KP40' (https://kp40.ru) status: BLOCKED
+I (207157) PINGER: Pinger::ping() started for host: google.com
+E (212957) ping_sock: send error=0
+W (213957) PINGER_CB: on_ping_timeout (single packet)
+I (213957) PINGER_CB: on_ping_end
+I (213957) PINGER: Pinger::ping() completed for host: google.com. Received: 0
+I (213957) WebsiteDetector: Ping result for https://google.com (google.com): BLOCKED
+I (213967) WebsiteDetector: Full Access Site 'Google' (https://google.com) status: BLOCKED
+I (213967) WebsiteDetector: Website accessibility check completed.
+Free heap after checkAllSites (internal, 8bit): 209072 bytes (Used in call: 3324)
+Free heap after checkAllSites (total): 209072 bytes
