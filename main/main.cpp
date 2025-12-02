@@ -51,7 +51,6 @@ void initialize_led_strip() {
     ESP_LOGI(TAG, "Initializing LED strip on GPIO %d", LED_STRIP_GPIO);
 
     // Initialize all fields explicitly to avoid warnings
-    // Using values that are compatible with the older API as mentioned in your project context
     led_strip_config_t strip_config = {
         .strip_gpio_num = LED_STRIP_GPIO,
         .max_leds = LED_STRIP_LED_COUNT,
@@ -78,7 +77,7 @@ void initialize_led_strip() {
 }
 
 void set_led_strip_color(InternetStatus status) {
-    uint32_t red = 0, green = 0, blue = 0;
+    uint32_t red = 1, green = 0, blue = 1;
 
     switch (status) {
         case InternetStatus::FULL_ACCESS:
