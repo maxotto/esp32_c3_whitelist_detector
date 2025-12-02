@@ -1,0 +1,23 @@
+ESP_ERROR_CHECK failed: esp_err_t 0x3002 (ESP_ERR_WIFI_NOT_STARTED) at 0x4200a882
+--- 0x4200a882: wifi_init_sta() at E:/Projects/ESP32_C3_TESTS/WhiteListDetector/main/main.cpp:162
+--- 0x4038686b: _esp_error_check_failed at C:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_system/esp_err.c:49
+--- Stack dump detected
+file: "./main/main.cpp" line 162
+func: void wifi_init_sta()
+expression: esp_wifi_set_max_tx_power(48)
+
+abort() was called at PC 0x4038686b on core 0
+Core  0 register dump:
+MEPC    : 0x403868b6  RA      : 0x40386874  SP      : 0x3fc9fba0  GP      : 0x3fc95e00
+--- 0x403868b6: panic_abort at C:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_system/panic.c:483
+--- 0x40386874: esp_vApplicationTickHook at C:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_system/freertos_hooks.c:31
+TP      : 0x3fc9fe30  T0      : 0x37363534  T1      : 0x7271706f  T2      : 0x33323130
+S0/FP   : 0x00000004  S1      : 0x3fc9fc04  A0      : 0x3fc9fbcc  A1      : 0x3fc9fc02
+A2      : 0x00000000  A3      : 0x3fc9fbf9  A4      : 0x00000001  A5      : 0x3fc9d000
+A6      : 0x7a797877  A7      : 0x76757473  S2      : 0x00000000  S3      : 0x00000000
+S4      : 0x00000000  S5      : 0x00000000  S6      : 0x00000000  S7      : 0x00000000
+S8      : 0x00000000  S9      : 0x00000000  S10     : 0x00000000  S11     : 0x00000000
+T3      : 0x6e6d6c6b  T4      : 0x6a696867  T5      : 0x66656463  T6      : 0x62613938
+MSTATUS : 0x00001881  MTVEC   : 0x40380001  MCAUSE  : 0x00000002  MTVAL   : 0x00000000
+--- 0x40380001: _vector_table at C:/Espressif/frameworks/esp-idf-v5.5.1/components/riscv/vectors_intc.S:54
+MHARTID : 0x00000000
