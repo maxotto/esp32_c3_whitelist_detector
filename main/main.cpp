@@ -47,6 +47,35 @@ void initialize_led_strip();
 void set_led_strip_color(InternetStatus status);
 
 // --- LED Strip Control ---
+
+struct RgbColor {
+    uint32_t r, g, b;
+};
+
+static RgbColor s_current_color = {0, 0, 0};
+static SemaphoreHandle_t s_color_mutex = NULL;
+static TaskHandle_t s_scanner_task_handle = NULL;
+
+void scanner_task(void* param) {
+    while(1) {
+        for (int i = 0; i < LED_STRIP_LED_COUNT; i++) {
+            xSemaphoreTake(s_color_mutex, portMAX_DELAY);
+            RgbColor base_color = s_current_color;
+            xSemaphoreGive(s_color_mutex);
+
+            // Set all pixels to base color
+            for (int j = 0; j < LED_STRIP_LED_COUNT; j++) {
+                led_strip_set_pixel(led_strip, j, base_color.r, base_color.g, base_color.b);
+            }
+            // Dim the currently active pixel
+            led_strip_set_pixel(led_strip, i, base_color.r / 4, base_color.g / 4, base_color.b / 4);
+            
+            led_strip_refresh(led_strip);
+            vTaskDelay(pdMS_TO_TICKS(300));
+        }
+    }
+}
+
 void initialize_led_strip() {
     ESP_LOGI(TAG, "Initializing LED strip on GPIO %d", LED_STRIP_GPIO);
 
@@ -77,31 +106,35 @@ void initialize_led_strip() {
 }
 
 void set_led_strip_color(InternetStatus status) {
-    uint32_t red = 1, green = 0, blue = 1;
+    RgbColor new_color = {0, 0, 0};
 
     switch (status) {
         case InternetStatus::FULL_ACCESS:
-            green = 128; // Green
+            new_color = {0, 128, 0}; // Green
             break;
         case InternetStatus::RF_SITES_ONLY:
-            red = 128; green = 128; // Yellow
+            new_color = {128, 128, 0}; // Yellow
             break;
         case InternetStatus::WHITE_LIST:
-            red = 255; green = 100; // Orange
+            new_color = {255, 100, 0}; // Orange
             break;
         case InternetStatus::NO_INTERNET:
-            red = 128; // Red
+            new_color = {128, 0, 0}; // Red
             break;
         case InternetStatus::UNKNOWN:
         default:
-            // Keep LEDs off
+            new_color = {1, 1, 1}; // Off
             break;
     }
 
-    ESP_LOGI(TAG, "Setting LED color for status %s -> R:%d G:%d B:%d", statusToString(status).c_str(), (int)red, (int)green, (int)blue);
+    ESP_LOGI(TAG, "Setting LED color for status %s -> R:%d G:%d B:%d", statusToString(status).c_str(), (int)new_color.r, (int)new_color.g, (int)new_color.b);
+
+    xSemaphoreTake(s_color_mutex, portMAX_DELAY);
+    s_current_color = new_color;
+    xSemaphoreGive(s_color_mutex);
 
     for (int i = 0; i < LED_STRIP_LED_COUNT; i++) {
-        ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, red, green, blue));
+        ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, new_color.r, new_color.g, new_color.b));
     }
     ESP_ERROR_CHECK(led_strip_refresh(led_strip));
 }
@@ -259,6 +292,7 @@ extern "C" void app_main() {
     ESP_ERROR_CHECK(ret);
 
     initialize_led_strip();
+    s_color_mutex = xSemaphoreCreateMutex();
     
     // Start blinking before initiating WiFi connection
     if (s_blink_task_handle == NULL) {
@@ -268,20 +302,25 @@ extern "C" void app_main() {
     wifi_init_sta();
 
     // The wifi_event_handler will stop the blink task upon successful connection
-
+    set_led_strip_color(InternetStatus::UNKNOWN); // Initial color state
 
     // --- Main Loop ---
     while(1) {
         ESP_LOGI(TAG, "--- Starting new round of status checks ---");
+        
+        // Start scanner animation
+        xTaskCreate(scanner_task, "scanner", 2048, NULL, 5, &s_scanner_task_handle);
 
         bool google_ok = execute_ping(FULL_ACCESS_HOST);
-        vTaskDelay(pdMS_TO_TICKS(1000)); 
-
         bool dzen_ok = execute_ping(RF_SITE_1);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-
         bool kp40_ok = execute_ping(RF_SITE_2);
         
+        // Stop scanner animation
+        if(s_scanner_task_handle != NULL) {
+            vTaskDelete(s_scanner_task_handle);
+            s_scanner_task_handle = NULL;
+        }
+
         InternetStatus current_status;
         if (google_ok) {
             current_status = InternetStatus::FULL_ACCESS;
