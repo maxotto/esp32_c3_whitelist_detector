@@ -166,11 +166,18 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) { 
         esp_wifi_connect(); 
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        ESP_LOGI(TAG, "Disconnected. Retrying to connect to the AP...");
-        if (s_blink_task_handle == NULL) { // Start blinking if not already
-            xTaskCreate(wifi_connecting_blink_task, "wifi_blink", 2048, NULL, 5, &s_blink_task_handle);
+        ESP_LOGI(TAG, "Disconnected. Restarting device due to WiFi loss...");
+        if (s_blink_task_handle != NULL) {
+            vTaskDelete(s_blink_task_handle);
+            s_blink_task_handle = NULL;
         }
-        esp_wifi_connect();
+        // Set all LEDs to red to indicate restart
+        for (int i = 0; i < LED_STRIP_LED_COUNT; i++) {
+            led_strip_set_pixel(led_strip, i, 128, 0, 0); // Red
+        }
+        led_strip_refresh(led_strip);
+        vTaskDelay(pdMS_TO_TICKS(2000)); // Delay for 2 seconds
+        esp_restart();
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
@@ -252,7 +259,7 @@ bool execute_ping(const std::string& host) {
     inet_addr_to_ip4addr(ip_2_ip4(&target_addr), &addr4);
     freeaddrinfo(res);
     config.target_addr = target_addr;
-    config.count = 3;
+    config.count = 5;
     config.timeout_ms = 1000;
     esp_ping_callbacks_t cbs = { .cb_args = &ctx, .on_ping_success = ping_on_success_cb, .on_ping_timeout = ping_on_timeout_cb, .on_ping_end = ping_on_end_cb };
     esp_ping_handle_t ping;
@@ -310,6 +317,11 @@ extern "C" void app_main() {
         
         // Start scanner animation
         xTaskCreate(scanner_task, "scanner", 2048, NULL, 5, &s_scanner_task_handle);
+
+        // --- Diagnostic Ping ---
+        bool router_ok = execute_ping("192.168.1.1");
+        ESP_LOGI(TAG, "Diagnostic: Ping to router (192.168.1.1) was %s", router_ok ? "SUCCESSFUL" : "FAILED");
+        // --- End of Diagnostic Ping ---
 
         bool google_ok = execute_ping(FULL_ACCESS_HOST);
         bool dzen_ok = execute_ping(RF_SITE_1);

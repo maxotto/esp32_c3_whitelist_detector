@@ -1,7 +1,7 @@
 {
     "version":            "1.2",
     "project_name":       "WhiteListDetector",
-    "project_version":    "4b980e0-dirty",
+    "project_version":    "0.0.1-dirty",
     "project_path":       "E:/Projects/ESP32_C3_TESTS/WhiteListDetector",
     "idf_path":           "C:/Espressif/frameworks/esp-idf-v5.5.1",
     "build_dir":          "E:/Projects/ESP32_C3_TESTS/WhiteListDetector/build",
