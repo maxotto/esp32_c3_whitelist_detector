@@ -13,17 +13,17 @@
 #include "lwip/netdb.h"
 #include "ping/ping_sock.h"
 #include "esp_wifi.h" // For wifi_init_sta
-#include "led_strip.h" 
-#include "led_strip_types.h" // Explicitly include for enums 
+#include "led_strip.h"
+#include "led_strip_types.h" // Explicitly include for enums
 #include "web_server.h" // Include our new web server component
+#include "esp_http_server.h" // For httpd_stop
 
 
 #define LED_STRIP_GPIO 2
 #define LED_STRIP_LED_COUNT 4
 
-#define DEFAULT_WIFI_SSID "Tuchnevo7"
-#define DEFAULT_WIFI_PASSWORD "dtcmvbhnfyrb!!"
-#define DEFAULT_MQTT_HOST "192.168.1.5"
+// Use the same default values as defined in config_manager.h
+// We don't redefine them here, just use the ones from config_manager.h
 
 const std::string FULL_ACCESS_HOST = "google.com";
 const std::string RF_SITE_1 = "dzen.ru";
@@ -149,6 +149,7 @@ static EventGroupHandle_t s_wifi_event_group;
 #define WIFI_CONNECTED_BIT BIT0
 
 static TaskHandle_t s_blink_task_handle = NULL;
+static bool s_wifi_connected_once = false; // Flag to track if we ever connected successfully
 
 void wifi_connecting_blink_task(void *pvParameters) {
     bool led_on = false;
@@ -166,23 +167,47 @@ void wifi_connecting_blink_task(void *pvParameters) {
     }
 }
 
+static httpd_handle_t s_web_server = NULL; // Global variable to store server handle
+static bool s_should_switch_to_sta = false; // Flag to signal switching from AP to STA mode
+
+// Callback function called from web server when config is saved
+void on_config_saved() {
+    ESP_LOGI(TAG, "Configuration saved, scheduling device restart in 2 seconds...");
+    vTaskDelay(pdMS_TO_TICKS(2000)); // Wait 2 seconds to allow response to be sent
+    esp_restart(); // Restart the device to apply new configuration
+}
+
 static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
-    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) { 
-        esp_wifi_connect(); 
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
+        esp_wifi_connect();
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        ESP_LOGI(TAG, "Disconnected. Restarting device due to WiFi loss...");
-        if (s_blink_task_handle != NULL) {
-            vTaskDelete(s_blink_task_handle);
-            s_blink_task_handle = NULL;
+        if (s_wifi_connected_once) {
+            // We were previously connected, now we lost connection - restart device
+            ESP_LOGI(TAG, "Previously connected, now disconnected. Restarting device due to WiFi loss...");
+            if (s_blink_task_handle != NULL) {
+                vTaskDelete(s_blink_task_handle);
+                s_blink_task_handle = NULL;
+            }
+            // Set all LEDs to red to indicate restart
+            for (int i = 0; i < LED_STRIP_LED_COUNT; i++) {
+                led_strip_set_pixel(led_strip, i, 128, 0, 0); // Red
+            }
+            led_strip_refresh(led_strip);
+            vTaskDelay(pdMS_TO_TICKS(2000)); // Delay for 2 seconds
+            esp_restart();
+        } else {
+            // We never connected successfully, switch to AP mode for configuration
+            ESP_LOGI(TAG, "Failed to connect to WiFi. Switching to AP mode for configuration...");
+            if (s_blink_task_handle != NULL) {
+                vTaskDelete(s_blink_task_handle);
+                s_blink_task_handle = NULL;
+            }
+
+            // Start provisioning AP mode
+            start_provisioning_ap(&s_web_server);
         }
-        // Set all LEDs to red to indicate restart
-        for (int i = 0; i < LED_STRIP_LED_COUNT; i++) {
-            led_strip_set_pixel(led_strip, i, 128, 0, 0); // Red
-        }
-        led_strip_refresh(led_strip);
-        vTaskDelay(pdMS_TO_TICKS(2000)); // Delay for 2 seconds
-        esp_restart();
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+        s_wifi_connected_once = true; // Mark that we successfully connected once
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
         if (s_blink_task_handle != NULL) { // Stop blinking
@@ -196,8 +221,20 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
 }
 void wifi_init_sta(const app_config_t* app_config) {
     s_wifi_event_group = xEventGroupCreate();
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    s_wifi_connected_once = false; // Reset flag when starting new connection attempt
+    s_should_switch_to_sta = false; // Also reset the switch flag
+    
+    // Ensure WiFi is stopped before configuring
+    esp_err_t err = esp_wifi_disconnect();
+    if (err != ESP_ERR_WIFI_NOT_INIT && err != ESP_ERR_WIFI_NOT_STARTED) {
+        ESP_ERROR_CHECK_WITHOUT_ABORT(err);
+    }
+    
+    err = esp_wifi_stop();
+    if (err != ESP_ERR_WIFI_NOT_INIT && err != ESP_ERR_WIFI_NOT_STARTED) {
+        ESP_ERROR_CHECK_WITHOUT_ABORT(err);
+    }
+    
     esp_netif_create_default_wifi_sta();
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -213,16 +250,24 @@ void wifi_init_sta(const app_config_t* app_config) {
     ESP_ERROR_CHECK(esp_wifi_start());
 
     // Set WiFi TX power to 60% (48 units out of 80 max) after WiFi has started
-    ESP_ERROR_CHECK(esp_wifi_set_max_tx_power(48)); 
+    ESP_ERROR_CHECK(esp_wifi_set_max_tx_power(48));
 
     ESP_LOGI(TAG, "wifi_init_sta finished.");
     ESP_LOGI(TAG, "Waiting for WiFi connection...");
-    EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group, WIFI_CONNECTED_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
+    
+    // Wait for connection with timeout (30 seconds)
+    EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group, WIFI_CONNECTED_BIT, pdFALSE, pdFALSE, pdMS_TO_TICKS(30000));
 
-    if (bits & WIFI_CONNECTED_BIT) { 
-        ESP_LOGI(TAG, "Connected to ap SSID:%s", app_config->wifi_ssid); 
-    } else { 
-        ESP_LOGE(TAG, "UNEXPECTED EVENT while waiting for connection."); 
+    if (bits & WIFI_CONNECTED_BIT) {
+        ESP_LOGI(TAG, "Connected to ap SSID:%s", app_config->wifi_ssid);
+    } else {
+        ESP_LOGE(TAG, "CONNECTION TIMEOUT - Failed to connect to WiFi within 30 seconds. Switching back to AP mode.");
+        // Switch back to AP mode if connection fails
+        if (s_blink_task_handle != NULL) {
+            vTaskDelete(s_blink_task_handle);
+            s_blink_task_handle = NULL;
+        }
+        start_provisioning_ap(&s_web_server);
     }
 }
 
@@ -302,88 +347,117 @@ extern "C" void app_main() {
     }
     ESP_ERROR_CHECK(ret);
 
+    // Initialize event loop (only once for the entire application)
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+
     // Initialize SPIFFS
     ESP_ERROR_CHECK(init_spiffs());
-    list_spiffs_files("/spiffs"); // List files for debugging
 
     // --- Load / Set Default Configuration ---
     app_config_t current_app_config;
     ESP_LOGI(TAG, "Loading configuration from NVS...");
     esp_err_t load_err = load_config(&current_app_config);
+    bool config_exists = (load_err == ESP_OK);
+    
     if (load_err == ESP_ERR_NVS_NOT_FOUND) {
-        ESP_LOGW(TAG, "No configuration found, using default values.");
-        strcpy(current_app_config.wifi_ssid, DEFAULT_WIFI_SSID);
-        strcpy(current_app_config.wifi_password, DEFAULT_WIFI_PASSWORD);
-        strcpy(current_app_config.mqtt_host, DEFAULT_MQTT_HOST); // Default MQTT host
-        ESP_LOGI(TAG, "Saving default configuration to NVS...");
-        save_config(&current_app_config);
+        ESP_LOGW(TAG, "No configuration found, will start provisioning AP.");
     } else if (load_err != ESP_OK) {
-        ESP_LOGE(TAG, "Error loading config, using hardcoded defaults as a fallback.");
-        strcpy(current_app_config.wifi_ssid, DEFAULT_WIFI_SSID);
-        strcpy(current_app_config.wifi_password, DEFAULT_WIFI_PASSWORD);
-        strcpy(current_app_config.mqtt_host, DEFAULT_MQTT_HOST);
+        ESP_LOGE(TAG, "Error loading config.");
     } else {
         ESP_LOGI(TAG, "Configuration loaded successfully from NVS.");
     }
-    ESP_LOGI(TAG, "Using Config -- SSID: [%s]", current_app_config.wifi_ssid);
     // --- End Configuration Load ---
 
-    start_provisioning_ap();
-
-    // The old logic is commented out for now to force AP mode for testing.
-    // We will later add logic to switch between STA and AP.
-    /*
-    initialize_led_strip();
-    s_color_mutex = xSemaphoreCreateMutex();
+    // Check if we have valid configuration
+    ESP_LOGI(TAG, "Checking configuration validity...");
+    ESP_LOGI(TAG, "Config exists: %s", config_exists ? "YES" : "NO");
+    ESP_LOGI(TAG, "WiFi SSID length: %d", (int)strlen(current_app_config.wifi_ssid));
+    ESP_LOGI(TAG, "WiFi Password length: %d", (int)strlen(current_app_config.wifi_password));
+    ESP_LOGI(TAG, "WiFi SSID: '%s'", current_app_config.wifi_ssid);
+    ESP_LOGI(TAG, "WiFi Password: '%s'", current_app_config.wifi_password);
     
-    // Start blinking before initiating WiFi connection
-    if (s_blink_task_handle == NULL) {
-        xTaskCreate(wifi_connecting_blink_task, "wifi_blink", 2048, NULL, 5, &s_blink_task_handle);
-    }
-    
-    wifi_init_sta(&current_app_config);
-
-    // The wifi_event_handler will stop the blink task upon successful connection
-    set_led_strip_color(InternetStatus::UNKNOWN); // Initial color state
-
-    // --- Main Loop ---
-    while(1) {
-        ESP_LOGI(TAG, "--- Starting new round of status checks ---");
+    if (config_exists &&
+        strlen(current_app_config.wifi_ssid) > 0 &&
+        strlen(current_app_config.wifi_password) > 0) {
         
-        // Start scanner animation
-        xTaskCreate(scanner_task, "scanner", 2048, NULL, 5, &s_scanner_task_handle);
+        // Try to connect in STA mode with loaded configuration
+        initialize_led_strip();
+        s_color_mutex = xSemaphoreCreateMutex();
 
-        // --- Diagnostic Ping ---
-        bool router_ok = execute_ping("192.168.1.1");
-        ESP_LOGI(TAG, "Diagnostic: Ping to router (192.168.1.1) was %s", router_ok ? "SUCCESSFUL" : "FAILED");
-        // --- End of Diagnostic Ping ---
-
-        bool google_ok = execute_ping(FULL_ACCESS_HOST);
-        bool dzen_ok = execute_ping(RF_SITE_1);
-        bool kp40_ok = execute_ping(RF_SITE_2);
-        
-        // Stop scanner animation
-        if(s_scanner_task_handle != NULL) {
-            vTaskDelete(s_scanner_task_handle);
-            s_scanner_task_handle = NULL;
+        // Start blinking before initiating WiFi connection
+        if (s_blink_task_handle == NULL) {
+            xTaskCreate(wifi_connecting_blink_task, "wifi_blink", 2048, NULL, 5, &s_blink_task_handle);
         }
 
-        InternetStatus current_status;
-        if (google_ok) {
-            current_status = InternetStatus::FULL_ACCESS;
-        } else if (dzen_ok && kp40_ok) {
-            current_status = InternetStatus::RF_SITES_ONLY;
-        } else if (dzen_ok && !kp40_ok) {
-            current_status = InternetStatus::WHITE_LIST;
-        } else {
-            current_status = InternetStatus::NO_INTERNET;
+        wifi_init_sta(&current_app_config);
+
+        // The wifi_event_handler will stop the blink task upon successful connection
+        set_led_strip_color(InternetStatus::UNKNOWN); // Initial color state
+
+        // --- Main Loop ---
+        while(1) {
+            ESP_LOGI(TAG, "--- Starting new round of status checks ---");
+
+            // Start scanner animation
+            xTaskCreate(scanner_task, "scanner", 2048, NULL, 5, &s_scanner_task_handle);
+
+            // --- Diagnostic Ping ---
+            bool router_ok = execute_ping("192.168.1.1");
+            ESP_LOGI(TAG, "Diagnostic: Ping to router (192.168.1.1) was %s", router_ok ? "SUCCESSFUL" : "FAILED");
+            // --- End of Diagnostic Ping ---
+
+            bool google_ok = execute_ping(FULL_ACCESS_HOST);
+            bool dzen_ok = execute_ping(RF_SITE_1);
+            bool kp40_ok = execute_ping(RF_SITE_2);
+
+            // Stop scanner animation
+            if(s_scanner_task_handle != NULL) {
+                vTaskDelete(s_scanner_task_handle);
+                s_scanner_task_handle = NULL;
+            }
+
+            InternetStatus current_status;
+            if (google_ok) {
+                current_status = InternetStatus::FULL_ACCESS;
+            } else if (dzen_ok && kp40_ok) {
+                current_status = InternetStatus::RF_SITES_ONLY;
+            } else if (dzen_ok && !kp40_ok) {
+                current_status = InternetStatus::WHITE_LIST;
+            } else {
+                current_status = InternetStatus::NO_INTERNET;
+            }
+
+            ESP_LOGI(TAG, "--- Current Internet Status: %s ---", statusToString(current_status).c_str());
+            set_led_strip_color(current_status);
+
+            ESP_LOGI(TAG, "Waiting 60 seconds for next check...");
+            vTaskDelay(pdMS_TO_TICKS(60000));
+        }
+    } else {
+        // No valid configuration found, start provisioning AP
+        ESP_LOGI(TAG, "Starting provisioning AP mode...");
+        start_provisioning_ap(&s_web_server);
+        
+        // Keep the device in AP mode until configuration is saved
+        while(!s_should_switch_to_sta) {
+            vTaskDelay(pdMS_TO_TICKS(1000));
         }
         
-        ESP_LOGI(TAG, "--- Current Internet Status: %s ---", statusToString(current_status).c_str());
-        set_led_strip_color(current_status);
+        // Configuration was saved, device will restart to apply new settings
+        ESP_LOGI(TAG, "Configuration saved, device will restart to apply new settings...");
+        if (s_web_server != NULL) {
+            // Give some time for the response to be sent
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            stop_web_server(s_web_server);
+            s_web_server = NULL;
+        }
         
-        ESP_LOGI(TAG, "Waiting 60 seconds for next check...");
-        vTaskDelay(pdMS_TO_TICKS(60000));
+        // Wait for restart
+        while(1) {
+            ESP_LOGI(TAG, "Device restarting in 2 seconds to apply new configuration...");
+            vTaskDelay(pdMS_TO_TICKS(2000));
+            esp_restart();
+        }
     }
-    */
 }

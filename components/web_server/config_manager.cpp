@@ -17,6 +17,9 @@ esp_err_t save_config(const app_config_t* config) {
         return err;
     }
 
+    ESP_LOGI(TAG, "Saving config to NVS - SSID: '%s', Password length: %d, MQTT Host: '%s'", 
+             config->wifi_ssid, (int)strlen(config->wifi_password), config->mqtt_host);
+
     err = nvs_set_str(nvs_handle, NVS_KEY_WIFI_SSID, config->wifi_ssid);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to write " NVS_KEY_WIFI_SSID ": %s", esp_err_to_name(err));
@@ -111,12 +114,19 @@ esp_err_t load_config(app_config_t* config) {
     }
 
     nvs_close(nvs_handle);
-    
+
     if (err == ESP_ERR_NVS_NOT_FOUND) {
          ESP_LOGW(TAG, "No configuration found in NVS. Using defaults.");
          return ESP_ERR_NVS_NOT_FOUND;
     }
-    
-    ESP_LOGI(TAG, "Configuration loaded successfully.");
+
+    ESP_LOGI(TAG, "Configuration loaded successfully. SSID: '%s', Password length: %d, MQTT Host: '%s'",
+             config->wifi_ssid, (int)strlen(config->wifi_password), config->mqtt_host);
     return ESP_OK;
+}
+
+void get_default_config(app_config_t* config) {
+    strcpy(config->wifi_ssid, DEFAULT_WIFI_SSID);
+    strcpy(config->wifi_password, DEFAULT_WIFI_PASSWORD);
+    strcpy(config->mqtt_host, DEFAULT_MQTT_HOST);
 }

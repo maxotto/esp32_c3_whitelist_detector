@@ -7,3 +7,8 @@ idf_component_register(SRCS "${srcs}"
                        INCLUDE_DIRS "."
                        REQUIRES spiffs nvs_flash esp_http_server esp_wifi)
 
+# Add SPIFFS image directory if it exists
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/spiffs_image)
+    spiffs_create_partition_image(storage ${CMAKE_CURRENT_SOURCE_DIR}/spiffs_image FLASH_IN_PROJECT)
+endif()
+
