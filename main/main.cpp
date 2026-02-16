@@ -16,14 +16,14 @@
 #include "led_strip_types.h" // Explicitly include for enums 
 
 // --- Configuration ---
-#define WIFI_SSID      "Tuchnevo7Viva"
+#define WIFI_SSID      "Tuchnevo7"
 #define WIFI_PASSWORD  "dtcmvbhnfyrb"
 #define LED_STRIP_GPIO 2
 #define LED_STRIP_LED_COUNT 4
 
 const std::string FULL_ACCESS_HOST = "google.com";
 const std::string RF_SITE_1 = "dzen.ru";
-const std::string RF_SITE_2 = "kp40.ru";
+const std::string RF_SITE_2 = "aftershock.news";
 
 static const char *TAG = "PING_APP";
 
@@ -52,7 +52,7 @@ struct RgbColor {
     uint32_t r, g, b;
 };
 
-static RgbColor s_current_color = {0, 0, 0};
+static RgbColor s_current_color = {5, 5, 0};
 static SemaphoreHandle_t s_color_mutex = NULL;
 static TaskHandle_t s_scanner_task_handle = NULL;
 
@@ -123,7 +123,7 @@ void set_led_strip_color(InternetStatus status) {
             break;
         case InternetStatus::UNKNOWN:
         default:
-            new_color = {1, 1, 1}; // Off
+            new_color = {0, 0, 5}; // Off
             break;
     }
 
