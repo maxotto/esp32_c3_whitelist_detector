@@ -22,7 +22,7 @@
 #define LED_STRIP_LED_COUNT 4
 
 #define DEFAULT_WIFI_SSID "Tuchnevo7"
-#define DEFAULT_WIFI_PASSWORD "dtcmvbhnfyrb"
+#define DEFAULT_WIFI_PASSWORD "dtcmvbhnfyrb!!"
 #define DEFAULT_MQTT_HOST "192.168.1.5"
 
 const std::string FULL_ACCESS_HOST = "google.com";
@@ -304,6 +304,7 @@ extern "C" void app_main() {
 
     // Initialize SPIFFS
     ESP_ERROR_CHECK(init_spiffs());
+    list_spiffs_files("/spiffs"); // List files for debugging
 
     // --- Load / Set Default Configuration ---
     app_config_t current_app_config;
@@ -327,9 +328,11 @@ extern "C" void app_main() {
     ESP_LOGI(TAG, "Using Config -- SSID: [%s]", current_app_config.wifi_ssid);
     // --- End Configuration Load ---
 
+    start_provisioning_ap();
 
-
-
+    // The old logic is commented out for now to force AP mode for testing.
+    // We will later add logic to switch between STA and AP.
+    /*
     initialize_led_strip();
     s_color_mutex = xSemaphoreCreateMutex();
     
@@ -382,4 +385,5 @@ extern "C" void app_main() {
         ESP_LOGI(TAG, "Waiting 60 seconds for next check...");
         vTaskDelay(pdMS_TO_TICKS(60000));
     }
+    */
 }
