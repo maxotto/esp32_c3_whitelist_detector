@@ -1,3 +1,4 @@
+#include "config_manager.h" // Include our new config manager
 #include <stdio.h>
 #include <string>
 #include <cstring>
@@ -14,12 +15,15 @@
 #include "esp_wifi.h" // For wifi_init_sta
 #include "led_strip.h" 
 #include "led_strip_types.h" // Explicitly include for enums 
+#include "web_server.h" // Include our new web server component
 
-// --- Configuration ---
-#define WIFI_SSID      "Tuchnevo7"
-#define WIFI_PASSWORD  "dtcmvbhnfyrb"
+
 #define LED_STRIP_GPIO 2
 #define LED_STRIP_LED_COUNT 4
+
+#define DEFAULT_WIFI_SSID "Tuchnevo7"
+#define DEFAULT_WIFI_PASSWORD "dtcmvbhnfyrb"
+#define DEFAULT_MQTT_HOST "192.168.1.5"
 
 const std::string FULL_ACCESS_HOST = "google.com";
 const std::string RF_SITE_1 = "dzen.ru";
@@ -40,7 +44,7 @@ enum class InternetStatus {
 };
 
 // --- Forward Declarations ---
-void wifi_init_sta();
+void wifi_init_sta(const app_config_t* app_config);
 bool execute_ping(const std::string& host);
 std::string statusToString(InternetStatus status);
 void initialize_led_strip();
@@ -190,7 +194,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     }
 }
-void wifi_init_sta() {
+void wifi_init_sta(const app_config_t* app_config) {
     s_wifi_event_group = xEventGroupCreate();
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -202,8 +206,8 @@ void wifi_init_sta() {
     ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL, &instance_any_id));
     ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL, &instance_got_ip));
     wifi_config_t wifi_config = {};
-    strncpy((char*)wifi_config.sta.ssid, WIFI_SSID, sizeof(wifi_config.sta.ssid));
-    strncpy((char*)wifi_config.sta.password, WIFI_PASSWORD, sizeof(wifi_config.sta.password));
+    strncpy((char*)wifi_config.sta.ssid, app_config->wifi_ssid, sizeof(wifi_config.sta.ssid));
+    strncpy((char*)wifi_config.sta.password, app_config->wifi_password, sizeof(wifi_config.sta.password));
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
@@ -216,7 +220,7 @@ void wifi_init_sta() {
     EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group, WIFI_CONNECTED_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
 
     if (bits & WIFI_CONNECTED_BIT) { 
-        ESP_LOGI(TAG, "Connected to ap SSID:%s", WIFI_SSID); 
+        ESP_LOGI(TAG, "Connected to ap SSID:%s", app_config->wifi_ssid); 
     } else { 
         ESP_LOGE(TAG, "UNEXPECTED EVENT while waiting for connection."); 
     }
@@ -298,6 +302,34 @@ extern "C" void app_main() {
     }
     ESP_ERROR_CHECK(ret);
 
+    // Initialize SPIFFS
+    ESP_ERROR_CHECK(init_spiffs());
+
+    // --- Load / Set Default Configuration ---
+    app_config_t current_app_config;
+    ESP_LOGI(TAG, "Loading configuration from NVS...");
+    esp_err_t load_err = load_config(&current_app_config);
+    if (load_err == ESP_ERR_NVS_NOT_FOUND) {
+        ESP_LOGW(TAG, "No configuration found, using default values.");
+        strcpy(current_app_config.wifi_ssid, DEFAULT_WIFI_SSID);
+        strcpy(current_app_config.wifi_password, DEFAULT_WIFI_PASSWORD);
+        strcpy(current_app_config.mqtt_host, DEFAULT_MQTT_HOST); // Default MQTT host
+        ESP_LOGI(TAG, "Saving default configuration to NVS...");
+        save_config(&current_app_config);
+    } else if (load_err != ESP_OK) {
+        ESP_LOGE(TAG, "Error loading config, using hardcoded defaults as a fallback.");
+        strcpy(current_app_config.wifi_ssid, DEFAULT_WIFI_SSID);
+        strcpy(current_app_config.wifi_password, DEFAULT_WIFI_PASSWORD);
+        strcpy(current_app_config.mqtt_host, DEFAULT_MQTT_HOST);
+    } else {
+        ESP_LOGI(TAG, "Configuration loaded successfully from NVS.");
+    }
+    ESP_LOGI(TAG, "Using Config -- SSID: [%s]", current_app_config.wifi_ssid);
+    // --- End Configuration Load ---
+
+
+
+
     initialize_led_strip();
     s_color_mutex = xSemaphoreCreateMutex();
     
@@ -306,7 +338,7 @@ extern "C" void app_main() {
         xTaskCreate(wifi_connecting_blink_task, "wifi_blink", 2048, NULL, 5, &s_blink_task_handle);
     }
     
-    wifi_init_sta();
+    wifi_init_sta(&current_app_config);
 
     // The wifi_event_handler will stop the blink task upon successful connection
     set_led_strip_color(InternetStatus::UNKNOWN); // Initial color state

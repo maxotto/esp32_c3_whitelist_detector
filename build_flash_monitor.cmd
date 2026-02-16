@@ -41,7 +41,7 @@ echo.
 echo [INFO] Flash successful. Starting monitor on COM8...
 echo ======================================================
 
-idf.py -p COM13 monitor
+idf.py monitor
 
 if %ERRORLEVEL% neq 0 (
     echo.

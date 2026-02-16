@@ -1,0 +1,3 @@
+## Yaml-file for ESP-IDF component manager
+version: "1.0.0"
+description: "Web server component for Wi-Fi provisioning and device status."

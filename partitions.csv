@@ -1,0 +1,6 @@
+# Name,   Type, SubType, Offset,  Size, Flags
+# Note: if you change this table, you'll need to do a full clean build.
+nvs,      data, nvs,     ,        24K,
+phy_init, data, phy,     ,        4K,
+factory,  app,  factory, ,        1M,
+storage,  data, spiffs,  ,        1M,
